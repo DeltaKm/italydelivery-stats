@@ -5,12 +5,20 @@ import {
   format, 
   parseISO, 
   startOfMonth,
-  getYear
+  getYear,
+  isValid
 } from 'date-fns';
 import { it } from 'date-fns/locale';
 
 export function groupOrdersByWeekAndMonth(data: unknown[], selectedYear?: number): MonthGroup[] {
   // Mappa i dati grezzi al formato OrderData
+  const parseDate = (val: unknown): Date | null => {
+    if (!val) return null;
+    const normalized = String(val).replace(' ', 'T');
+    const d = parseISO(normalized);
+    return isValid(d) ? d : null;
+  };
+
   const orders: OrderData[] = (data as Record<string, unknown>[]).map(row => ({
     created_at: String(row.created_at || ''),
     reference: String(row.reference || ''),
@@ -35,13 +43,8 @@ export function groupOrdersByWeekAndMonth(data: unknown[], selectedYear?: number
   // Filtra per anno se specificato
   const filteredOrders = selectedYear 
     ? uniqueOrders.filter(order => {
-        if (!order.created_at) return false;
-        try {
-          const date = parseISO(order.created_at);
-          return getYear(date) === selectedYear;
-        } catch {
-          return false;
-        }
+        const date = parseDate(order.created_at);
+        return date !== null && getYear(date) === selectedYear;
       })
     : uniqueOrders;
 
@@ -51,12 +54,14 @@ export function groupOrdersByWeekAndMonth(data: unknown[], selectedYear?: number
   filteredOrders.forEach(order => {
     if (!order.created_at) return;
 
-    const date = parseISO(order.created_at);
+    const date = parseDate(order.created_at);
+    if (!date) return;
+
     const monthKey = format(startOfMonth(date), 'yyyy-MM');
     
     // Calcola l'inizio della settimana (lunedì)
-    const weekStart = startOfWeek(date, { weekStartsOn: 1 });
-    const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
+    const weekStart = startOfWeek(date, { weekStartsOn: 1 as const });
+    const weekEnd = endOfWeek(date, { weekStartsOn: 1 as const });
     const weekKey = format(weekStart, 'yyyy-MM-dd');
 
     if (!monthMap.has(monthKey)) {
@@ -132,12 +137,9 @@ export function getAvailableYears(data: unknown[]): number[] {
   
   (data as Record<string, unknown>[]).forEach(row => {
     if (row.created_at) {
-      try {
-        const date = parseISO(row.created_at as string);
-        years.add(getYear(date));
-      } catch {
-        // Ignora date non valide
-      }
+      const normalized = String(row.created_at).replace(' ', 'T');
+      const date = parseISO(normalized);
+      if (isValid(date)) years.add(getYear(date));
     }
   });
   
