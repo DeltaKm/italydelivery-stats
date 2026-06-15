@@ -17,19 +17,23 @@ export function FileUploader({ onFileLoad }: FileUploaderProps) {
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const data = event.target?.result;
-        const workbook = XLSX.read(data, { type: 'binary' });
+        const data = event.target?.result as ArrayBuffer;
+        const dataArray = new Uint8Array(data);
+        const workbook = XLSX.read(dataArray, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
-        
+
         onFileLoad(jsonData);
       } catch (error) {
         console.error('Errore nel caricamento del file:', error);
         alert('Errore nel caricamento del file. Assicurati che sia un file Excel valido.');
       }
     };
-    reader.readAsBinaryString(file);
+    reader.onerror = () => {
+      alert('Errore nella lettura del file.');
+    };
+    reader.readAsArrayBuffer(file);
   };
 
   return (

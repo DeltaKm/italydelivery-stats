@@ -1,0 +1,24 @@
+diff --git a/node_modules/xlsx/xlsx.js b/node_modules/xlsx/xlsx.js
+index 9d08446..b723c29 100644
+--- a/node_modules/xlsx/xlsx.js
++++ b/node_modules/xlsx/xlsx.js
+@@ -20174,6 +20174,7 @@ wb.opts.Date1904 = Workbook.WBProps.date1904 = val; break;
+ 					}
+ 				} break;
+ 				case 0x00fd /* LabelSst */:
++					if(!sst[val.isst]) break;
+ 					temp_val=make_cell(sst[val.isst].t, val.ixfe, 's');
+ 					if(sst[val.isst].h) temp_val.h = sst[val.isst].h;
+ 					temp_val.XF = XFs[temp_val.ixfe];
+diff --git a/node_modules/xlsx/xlsx.mjs b/node_modules/xlsx/xlsx.mjs
+index 3e61a59..5408b84 100644
+--- a/node_modules/xlsx/xlsx.mjs
++++ b/node_modules/xlsx/xlsx.mjs
+@@ -20277,6 +20277,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
+ 					}
+ 				} break;
+ 				case 0x00fd /* LabelSst */:
++					if(!sst[val.isst]) break;
+ 					temp_val=make_cell(sst[val.isst].t, val.ixfe, 's');
+ 					if(sst[val.isst].h) temp_val.h = sst[val.isst].h;
+ 					temp_val.XF = XFs[temp_val.ixfe];
